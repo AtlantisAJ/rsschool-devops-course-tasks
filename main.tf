@@ -4,11 +4,12 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket = var.bucket_name
-    key = "state/terraform.tfstate"
-    region = var.region
-    encrypt = "true"
+    bucket  = "rsschool-tfstate-yauheni-240611"
+    key     = "state/terraform.tfstate"
+    region  = "eu-central-1"
+    encrypt = true
   }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
