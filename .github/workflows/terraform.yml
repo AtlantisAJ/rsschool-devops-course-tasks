@@ -1,0 +1,72 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - task_1
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+      - name: Terraform Format
+        run: terraform fmt -check
+
+  terraform-plan:
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::049886442714:role/GithubActionsRole
+          aws-region: eu-central-1
+      - name: Terraform Init
+        run: terraform init -backend-config=backend.hcl
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+      - name: Archive Terraform Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan
+
+  terraform-apply:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    steps:
+      - uses: actions/checkout@v3
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::049886442714:role/GithubActionsRole
+          aws-region: eu-central-1
+      - name: Terraform Init
+        run: terraform init -backend-config=backend.hcl
+      - name: Download Terraform Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+      - name: Terraform Apply
+        run: terraform apply tfplan
