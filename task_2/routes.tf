@@ -7,7 +7,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "publio-route-table"
+    Name = "public-route-table"
   }
 }
 
