@@ -2,7 +2,7 @@ resource "aws_instance" "public_instance" {
   ami = "ami-02003f9f0fde924ea"
   instance_type = "t3.micro"
   subnet_id = aws_subnet.public_1.id
-  key_name = "jenya"
+  key_name = "NAT-key-Jenya"
 
   vpc_security_group_ids = [
   aws_security_group.public_sg.id
