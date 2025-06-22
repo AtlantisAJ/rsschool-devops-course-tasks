@@ -33,4 +33,4 @@ terraform-apply: Runs terraform apply on push to main branch.
 
 ## Resources
 S3 bucket: rsschool-tfstate-yauheni-240611
-IAM role: GithubActionsRole
+IAM role: GithubActionsRoleAtlantisAJ
