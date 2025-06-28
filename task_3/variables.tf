@@ -9,16 +9,12 @@ variable "key_name" {
   default     = "NAT-key-Jenya"
 }
 
-variable "vpc_id" {
-  description = "VPC ID"
-}
-
 variable "public_subnet_id" {
   description = "Subnet ID for bastion"
 }
 
 variable "bastion_ami" {
-  default = "ami-02003f9f0fde924ea" # Ubuntu 22.04, Frankfurt
+  default = "ami-02003f9f0fde924ea"
 }
 
 variable "bastion_instance_type" {

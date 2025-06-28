@@ -3,5 +3,5 @@ terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
 .idea/
-task_2/NAT-key-Jenya.pem
+task_3/NAT-key-Jenya.pem
 .DS_Store
