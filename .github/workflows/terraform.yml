@@ -36,7 +36,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::049886442714:role/GithubActionsRole
+          role-to-assume: arn:aws:iam::049886442714:role/GithubActionsRoleAtlantisAJ
           aws-region: eu-central-1
       - name: Terraform Init
         run: terraform init -backend-config=backend.hcl
@@ -60,7 +60,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::049886442714:role/GithubActionsRole
+          role-to-assume: arn:aws:iam::049886442714:role/GithubActionsRoleAtlantisAJ
           aws-region: eu-central-1
       - name: Terraform Init
         run: terraform init -backend-config=backend.hcl

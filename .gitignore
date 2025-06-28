@@ -5,3 +5,4 @@ terraform.tfstate.backup
 .idea/
 task_3/NAT-key-Jenya.pem
 .DS_Store
+task_2/NAT-key-Jenya.pem
