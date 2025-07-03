@@ -1,0 +1,16 @@
+controller:
+  admin:
+    username: admin
+    password: "TOUModlUL3qAU1TfI5fbwc"
+  serviceType: ClusterIP
+  JCasC:
+    enabled: true
+    configScripts:
+      hello-world-job: |
+        jobs:
+          - script: >
+              job('HelloWorld') {
+                steps {
+                  shell('echo Hello world from JCasC!')
+                }
+              }
