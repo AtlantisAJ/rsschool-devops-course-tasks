@@ -1,0 +1,4 @@
+image:
+  repository: task-6
+  tag: latest
+  pullPolicy: Never
