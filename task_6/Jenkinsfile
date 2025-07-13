@@ -3,16 +3,18 @@ pipeline {
 
     environment {
         IMAGE_NAME = "task-6"
-        IMAGE_TAG = "latest"
-        SERVICE_NAME = "task-6-service"
-        EXPECTED_TEXT = "Task 6 Application Deployment via Jenkins Pipeline"
+        KUBE_CONFIG = credentials('kubeconfig')
     }
 
     stages {
-        stage('Prepare Minikube Environment') {
+        stage('Prepare Environment') {
             steps {
                 script {
-                    sh 'eval $(minikube docker-env)'
+                    sh '''
+                        which docker || { echo "Docker not found"; exit 1; }
+                        which kubectl || { echo "kubectl not found"; exit 1; }
+                        which minikube || { echo "minikube not found"; exit 1; }
+                    '''
                 }
             }
         }
@@ -20,8 +22,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                    sh "docker images | grep ${IMAGE_NAME}"
+                    docker.build("${IMAGE_NAME}:latest")
                 }
             }
         }
@@ -29,71 +30,27 @@ pipeline {
         stage('Deploy with Helm') {
             steps {
                 sh """
+                export KUBECONFIG=${KUBE_CONFIG}
                 helm upgrade --install ${IMAGE_NAME} ./helm-chart \
                     --set image.repository=${IMAGE_NAME} \
-                    --set image.tag=${IMAGE_TAG} \
+                    --set image.tag=latest \
                     --set image.pullPolicy=Never \
                     --atomic --wait
                 """
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Verify') {
             steps {
                 script {
-                    sh "kubectl wait --for=condition=ready pod -l app=${IMAGE_NAME} --timeout=120s"
-
-
-                    def url = sh(
-                        script: "minikube service ${SERVICE_NAME} --url | head -n 1",
-                        returnStdout: true
-                    ).trim()
-
-                    echo "🔄check to adress: ${url}"
-
-                    def response = sh(
-                        script: "curl -s ${url}",
-                        returnStdout: true
-                    ).trim()
-
-                    echo "📄 response to server:\n${response}"
-
-                    if (!response.contains(EXPECTED_TEXT)) {
-                        error "❌ Text '${EXPECTED_TEXT}' not found"
-                    }
-
-                    echo "✅ Verification successful: text found '${EXPECTED_TEXT}'"
+                    sh """
+                    export KUBECONFIG=${KUBE_CONFIG}
+                    kubectl wait --for=condition=ready pod -l app=${IMAGE_NAME} --timeout=120s
+                    URL=$(minikube service ${IMAGE_NAME}-service --url)
+                    curl -s \$URL | grep "Task 6 Application Deployment" || exit 1
+                    """
                 }
             }
-        }
-    }
-
-    post {
-        always {
-            sh """
-            echo "### Pod status:"
-            kubectl get pods
-            echo "\n### Pod logs:"
-            kubectl logs -l app=${IMAGE_NAME} --tail=50 || true
-            """
-        }
-        success {
-            slackSend(
-                channel: '#your-channel',
-                message: """✅ successfully Task 6!
-                *Сборка:* ${env.BUILD_NUMBER}
-                *URL:* ${url}
-                *Текст проверки:* '${EXPECTED_TEXT}' найден"""
-            )
-        }
-        failure {
-            slackSend(
-                channel: '#your-channel',
-                color: 'danger',
-                message: """❌ Mistake in Task 6!
-                *Сборка:* ${env.BUILD_NUMBER}
-                *Логи:* ${env.BUILD_URL}console"""
-            )
         }
     }
 }
