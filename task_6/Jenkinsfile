@@ -51,10 +51,10 @@ pipeline {
 
     post {
         success {
-            slackSend channel: '#ci-notifications', message: "✅ Task 6 pipeline passed: ${env.BUILD_URL}"
+            echo "✅ Pipeline passed successfully!"
         }
         failure {
-            slackSend channel: '#ci-notifications', message: "❌ Task 6 pipeline failed: ${env.BUILD_URL}"
+            echo "❌ Pipeline failed!"
         }
     }
 }
