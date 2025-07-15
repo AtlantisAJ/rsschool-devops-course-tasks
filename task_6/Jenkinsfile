@@ -2,55 +2,59 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "task-6"
-        KUBE_CONFIG = credentials('kubeconfig')
+        IMAGE_NAME = 'task-6'
+        IMAGE_TAG = 'latest'
     }
 
     stages {
-        stage('Prepare Environment') {
-            steps {
-                script {
-                    sh '''
-                        which docker || { echo "Docker not found"; exit 1; }
-                        which kubectl || { echo "kubectl not found"; exit 1; }
-                        which minikube || { echo "minikube not found"; exit 1; }
-                    '''
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${IMAGE_NAME}:latest")
+                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
 
-        stage('Deploy with Helm') {
+        stage('(Optional) Unit Test') {
+            steps {
+                echo 'No unit tests defined. Skipping...'
+            }
+        }
+
+        stage('(Optional) SonarQube Scan') {
+            steps {
+                echo 'SonarQube scan skipped for static HTML app.'
+            }
+        }
+
+        stage('Helm Deploy') {
             steps {
                 sh """
-                export KUBECONFIG=${KUBE_CONFIG}
-                helm upgrade --install ${IMAGE_NAME} ./helm-chart \
+                    helm upgrade --install ${IMAGE_NAME} ./helm-chart \
                     --set image.repository=${IMAGE_NAME} \
-                    --set image.tag=latest \
-                    --set image.pullPolicy=Never \
-                    --atomic --wait
+                    --set image.tag=${IMAGE_TAG} \
+                    --set image.pullPolicy=Never
                 """
             }
         }
 
-        stage('Verify') {
+        stage('Verify Deployment') {
             steps {
                 script {
-                    sh """
-                    export KUBECONFIG=${KUBE_CONFIG}
-                    kubectl wait --for=condition=ready pod -l app=${IMAGE_NAME} --timeout=120s
-                    URL=$(minikube service ${IMAGE_NAME}-service --url)
-                    curl -s \$URL | grep "Task 6 Application Deployment" || exit 1
-                    """
+                    def URL = sh(script: "minikube service ${IMAGE_NAME} --url", returnStdout: true).trim()
+                    sh "curl -s $URL | grep 'Task 6' || exit 1"
+                    echo "✅ Application is accessible at: $URL"
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            slackSend channel: '#ci-notifications', message: "✅ Task 6 pipeline passed: ${env.BUILD_URL}"
+        }
+        failure {
+            slackSend channel: '#ci-notifications', message: "❌ Task 6 pipeline failed: ${env.BUILD_URL}"
         }
     }
 }

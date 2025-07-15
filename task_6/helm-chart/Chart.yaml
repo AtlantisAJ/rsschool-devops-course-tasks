@@ -1,4 +1,4 @@
 apiVersion: v2
 name: task-6
-description: A minimal Helm chart for Hello World
+description: Helm chart for Task 6
 version: 0.1.0
