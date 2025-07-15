@@ -1,11 +1,13 @@
 pipeline {
     agent any
+
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/AtlantisAJ/rsschool-devops-course-tasks'
+                git branch: 'task_6', url: 'https://github.com/AtlantisAJ/rsschool-devops-course-tasks'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 script {
