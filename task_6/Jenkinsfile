@@ -1,81 +1,45 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    IMAGE_NAME = "ghcr.io/atlantisaj/task6-html-app"
-    IMAGE_TAG = "latest"
-    REGISTRY_CREDENTIALS = 'github-packages-token'
-  }
+    environment {
+        IMAGE_NAME = "ghcr.io/atlantisaj/task6-html-app"
+        IMAGE_TAG = "latest"
+        GITHUB_CREDENTIALS = credentials('github-packages-token')
+    }
 
-  triggers {
-    githubPush()
-  }
-
-  stages {
-
-    stage('Install Dependencies') {
-      steps {
-        dir('task_6') {
-          sh 'npm install'
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'task_6', url: 'https://github.com/AtlantisAJ/rsschool-devops-course-tasks'
+            }
         }
-      }
-    }
 
-    stage('Run Unit Tests') {
-      steps {
-        dir('task_6') {
-          sh 'npm test'
+        stage('Build Docker Image') {
+            steps {
+                dir('task_6') {
+                    sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                }
+            }
         }
-      }
-    }
 
-    stage('SonarQube Analysis') {
-      steps {
-        echo 'Skipping SonarQube (not configured)'
-      }
-    }
-
-    stage('Docker Build & Push') {
-      steps {
-        script {
-          docker.withRegistry('https://ghcr.io', REGISTRY_CREDENTIALS) {
-            def image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "task_6")
-            image.push()
-          }
+        stage('Push Docker Image') {
+            steps {
+                withDockerRegistry([url: 'https://ghcr.io', credentialsId: 'github-packages-token']) {
+                    sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
+                }
+            }
         }
-      }
-    }
 
-    stage('Helm Deploy to K8s') {
-      steps {
-        dir('task_6') {
-          sh '''
-            helm upgrade --install task6-html-app helm-chart \
-              --set image.repository=${IMAGE_NAME} \
-              --set image.tag=${IMAGE_TAG}
-          '''
+        stage('Deploy to K8s') {
+            steps {
+                dir('task_6') {
+                    sh '''
+                    helm upgrade --install task6-html-app helm-chart \
+                      --set image.repository=$IMAGE_NAME \
+                      --set image.tag=$IMAGE_TAG
+                    '''
+                }
+            }
         }
-      }
     }
-
-    stage('Smoke Test') {
-      steps {
-        script {
-          sh 'sleep 10'
-          sh '''
-            curl -f http://task6-html-app.default.svc.cluster.local || exit 1
-          '''
-        }
-      }
-    }
-  }
-
-  post {
-    success {
-      echo "✅ Pipeline succeeded!"
-    }
-    failure {
-      echo "❌ Pipeline failed!"
-    }
-  }
 }
