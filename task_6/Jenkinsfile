@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    IMAGE_NAME = "ghcr.io/YOUR_GITHUB_USERNAME/task6-html-app"
+    IMAGE_NAME = "ghcr.io/atlantisaj/task6-html-app"
     IMAGE_TAG = "latest"
     REGISTRY_CREDENTIALS = 'github-packages-token'
   }
@@ -12,21 +12,26 @@ pipeline {
   }
 
   stages {
-    stage('Build') {
+
+    stage('Install Dependencies') {
       steps {
-        echo 'No build needed for static HTML.'
+        dir('task_6') {
+          sh 'npm install'
+        }
       }
     }
 
-    stage('Unit Tests') {
+    stage('Run Unit Tests') {
       steps {
-        echo 'No tests for static HTML.'
+        dir('task_6') {
+          sh 'npm test'
+        }
       }
     }
 
     stage('SonarQube Analysis') {
       steps {
-        echo 'Skipping SonarQube for HTML (mock step).'
+        echo 'Skipping SonarQube (not configured)'
       }
     }
 
@@ -34,39 +39,43 @@ pipeline {
       steps {
         script {
           docker.withRegistry('https://ghcr.io', REGISTRY_CREDENTIALS) {
-            def image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+            def image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}", "task_6")
             image.push()
           }
         }
       }
     }
 
-    stage('Deploy with Helm') {
+    stage('Helm Deploy to K8s') {
       steps {
-        sh '''
-          helm upgrade --install task6-html-app ./helm-chart \
-            --set image.repository=${IMAGE_NAME} \
-            --set image.tag=${IMAGE_TAG}
-        '''
+        dir('task_6') {
+          sh '''
+            helm upgrade --install task6-html-app helm-chart \
+              --set image.repository=${IMAGE_NAME} \
+              --set image.tag=${IMAGE_TAG}
+          '''
+        }
       }
     }
 
     stage('Smoke Test') {
       steps {
-        sh '''
-          sleep 10
-          curl -f http://task6-html-app.default.svc.cluster.local || exit 1
-        '''
+        script {
+          sh 'sleep 10'
+          sh '''
+            curl -f http://task6-html-app.default.svc.cluster.local || exit 1
+          '''
+        }
       }
     }
   }
 
   post {
     success {
-      echo 'Pipeline completed successfully!'
+      echo "✅ Pipeline succeeded!"
     }
     failure {
-      echo 'Pipeline failed!'
+      echo "❌ Pipeline failed!"
     }
   }
 }
