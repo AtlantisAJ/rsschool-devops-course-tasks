@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'task_6', url: 'https://github.com/AtlantisAJ/rsschool-devops-course-tasks'
+                git branch: 'task_6', url: 'https://github.com/atlantisaj/rsschool-devops-course-tasks'
             }
         }
 
