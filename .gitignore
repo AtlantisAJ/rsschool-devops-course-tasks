@@ -6,3 +6,4 @@ terraform.tfstate.backup
 task_3/NAT-key-Jenya.pem
 .DS_Store
 task_2/NAT-key-Jenya.pem
+task_6/node_modules
