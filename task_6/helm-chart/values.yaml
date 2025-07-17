@@ -1,4 +1,16 @@
+replicaCount: 1
+
 image:
-  repository: task-6
+  repository: ghcr.io/atlantisaj/task6-html-app
   tag: latest
-  pullPolicy: Never
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+
+imagePullSecrets:
+  - name: ghcr-creds

@@ -1,71 +1,31 @@
-# Task 6: Deployment to Kubernetes via Jenkins
+# Task 6: Application Deployment via Jenkins Pipeline
 
-## Description
-The task involved setting up a Jenkins pipeline to deploy an application to a Kubernetes cluster using Helm.  
-**Actual Result**: Due to technical difficulties with the local environment, the deployment was performed manually.
+## Проект
 
-## Issues and Solutions
+Простое HTML-приложение, разворачиваемое в Kubernetes через Helm.
 
-### Challenges Encountered
-1. **Environment Conflicts**:
-    - Docker Desktop and Minikube use different Docker daemons.
-    - Jenkins lacked access to required tools (kubectl, helm).
+## Структура
 
-2. **Deployment Errors**:
-   ```bash
-   ErrImagePull, ImagePullBackOff
-   minikube: command not found
-   ```
+- `app/` — HTML-файл
+- `Dockerfile` — для сборки контейнера
+- `helm-chart/` — Helm chart для деплоя
+- `Jenkinsfile` — пайплайн Jenkins
 
-3. **Jenkins Plugin Issues**:
-    - Lack of Docker access from the pipeline.
-    - Required plugins (Slack, Kubernetes) were not installed.
+## Пайплайн включает:
 
-### What Worked
-1. Manual Docker Image Build:
-   ```bash
-   docker build -t task-6:latest .
-   ```
+- Сборку (не требуется)
+- Юнит-тесты (заглушка)
+- Анализ SonarQube (заглушка)
+- Сборку Docker-образа и пуш в GitHub Packages
+- Helm-деплой в K8s
+- Smoke test через `curl`
 
-2. Local Application Execution:
-   ```bash
-   docker run -p 8080:80 task-6
-   ```
-   Application accessible at: [http://localhost:8080](http://localhost:8080)
+## Требования
 
-## Repository Structure
-```
-task_6/
-├── helm-chart/          # Helm chart (not used due to errors)
-│   ├── Chart.yaml
-│   ├── values.yaml
-│   └── templates/
-├── Dockerfile           # Image configuration
-├── index.html           # Application web page
-└── Jenkinsfile          # Pipeline (requires refinement)
-```
+- Jenkins с Docker и Helm
+- K8s кластер
+- Настроенный GitHub Token с доступом к `ghcr.io`
 
-## How to Run (Alternative Method)
-1. Build the image:
-   ```bash
-   docker build -t task-6 .
-   ```
+## GitHub Packages
 
-2. Run the container:
-   ```bash
-   docker run -p 8080:80 task-6
-   ```
-
-3. Verify:
-   ```bash
-   curl http://localhost:8080 | grep "Task 6 Application Deployment"
-   ```
-
-## Screenshots
-Jenkins Dashboard (screenshots/Screenshot 2025-07-13 at 14.43.38)  
-![Running Application](screenshots/Screenshot 2025-07-13 at 14.49.48.png)  
-*Application page during local execution*
-
-## Conclusion
-The local environment (Docker Desktop + Minikube + Jenkins) proved too unstable for completing the task.  
-In real-world projects, cloud-based Kubernetes clusters and CI/CD systems are used, where such issues are typically avoided.
+Токен должен быть добавлен в Jenkins как credential с ID: `github-packages-token`.

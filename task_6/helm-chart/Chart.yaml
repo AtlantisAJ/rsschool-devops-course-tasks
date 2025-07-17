@@ -1,4 +1,5 @@
 apiVersion: v2
-name: task-6
-description: Helm chart for Task 6
+name: task6-html-app
+description: A simple HTML app for Task 6
 version: 0.1.0
+appVersion: "1.0"
