@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "ghcr.io/atlantisaj/task6-html-app"
+        IMAGE_TAG = "latest"
+        GITHUB_CREDENTIALS = credentials('github-packages-token')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'task_6', url: 'https://github.com/AtlantisAJ/rsschool-devops-course-tasks'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('task_6') {
+                    sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withDockerRegistry([url: 'https://ghcr.io', credentialsId: 'github-packages-token']) {
+                    sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
+                }
+            }
+        }
+
+        stage('Deploy to K8s') {
+            steps {
+                dir('task_6') {
+                    sh '''
+                    helm upgrade --install task6-html-app helm-chart \
+                      --set image.repository=$IMAGE_NAME \
+                      --set image.tag=$IMAGE_TAG
+                    '''
+                }
+            }
+        }
+    }
+}
