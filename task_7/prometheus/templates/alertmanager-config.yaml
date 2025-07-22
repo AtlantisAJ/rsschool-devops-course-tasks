@@ -1,0 +1,14 @@
+global:
+  smtp_smarthost: 'sandbox.smtp.mailtrap.io:2525'
+  smtp_from: 'jena@hitz.me'
+  smtp_auth_username: '700677bb318b74'
+  smtp_auth_password: 'e3a72bb45d6cdf'
+
+route:
+  receiver: 'mailtrap-test'
+
+receivers:
+  - name: 'mailtrap-test'
+    email_configs:
+      - to: 'akulenko.contact@gmail.com'
+        send_resolved: true
